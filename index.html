@@ -41,6 +41,31 @@
         <main class="canvas-container">
             <div id="container"></div>
         </main>
+        <aside class="sidebar" id="properties-sidebar">
+            <h3>Properties</h3>
+            <div id="properties-panel">
+                <p>Select an object to see its properties.</p>
+            </div>
+            <div id="arrange-panel">
+                <!-- Dynamically populated -->
+            </div>
+            <div id="grouping-panel">
+                <h4>Grouping</h4>
+                <button id="group-btn">Group</button>
+                <button id="ungroup-btn">Ungroup</button>
+            </div>
+            <div id="image-filters-panel"></div>
+            <div id="state-management-panel">
+                <h4>State Management</h4>
+                <button id="save-btn">Save</button>
+                <input type="file" id="load-btn" accept=".json">
+            </div>
+            <div id="export-panel">
+                <h4>Export</h4>
+                <button id="export-png-btn">Export as PNG</button>
+                <button id="export-jpeg-btn">Export as JPEG</button>
+            </div>
+        </aside>
     </div>
     <script src="https://unpkg.com/konva@8.3.13/konva.min.js"></script>
     <script src="script.js"></script>

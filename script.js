@@ -11,7 +11,7 @@ const stage = new Konva.Stage({
 });
 
 // Create a Layer
-const layer = new Konva.Layer();
+let layer = new Konva.Layer();
 
 // Add the layer to the stage
 stage.add(layer);
@@ -32,26 +32,269 @@ function addTransformer(shape) {
     layer.add(tr);
     layer.draw();
 
-    shape.on('click tap', () => {
-        // remove existing transformers
-        layer.find('Transformer').forEach(t => t.destroy());
+    shape.on('click tap', (e) => {
+        // if shift key is pressed, add/remove shape from selection
+        const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
+        const isSelected = tr.nodes().indexOf(shape) >= 0;
 
-        // create new transformer
-        const newTr = new Konva.Transformer({
-            nodes: [shape],
-        });
-        layer.add(newTr);
+        if (!metaPressed && !isSelected) {
+            // if no key pressed and the node is not selected
+            // select just one
+            tr.nodes([shape]);
+        } else if (metaPressed && isSelected) {
+            // if we select node that is already selected, remove it from selection
+            const nodes = tr.nodes().slice(); // use slice to have new copy of array
+            // remove node from array
+            nodes.splice(nodes.indexOf(shape), 1);
+            tr.nodes(nodes);
+        } else if (metaPressed && !isSelected) {
+            // add the node into selection
+            const nodes = tr.nodes().concat([shape]);
+            tr.nodes(nodes);
+        }
+        updatePropertiesPanel(tr.nodes().length === 1 ? shape : null);
+        updateArrangePanel(tr.nodes().length === 1 ? shape : null);
         layer.draw();
     });
 }
+
+const propertiesPanel = document.getElementById('properties-panel');
+
+function updatePropertiesPanel(node) {
+    propertiesPanel.innerHTML = ''; // Clear the panel
+
+    if (!node) {
+        propertiesPanel.innerHTML = '<p>Select an object to see its properties.</p>';
+        return;
+    }
+
+    const type = node.getClassName();
+    let controls = `<h4>${type} Properties</h4>`;
+
+    // Generic properties
+    controls += `
+        <label>X Position</label>
+        <input type="number" id="x-pos" value="${node.x()}">
+        <label>Y Position</label>
+        <input type="number" id="y-pos" value="${node.y()}">
+        <label>Width</label>
+        <input type="number" id="width" value="${node.width()}">
+        <label>Height</label>
+        <input type="number" id="height" value="${node.height()}">
+        <label>Rotation</label>
+        <input type="number" id="rotation" value="${node.rotation()}">
+    `;
+
+    propertiesPanel.innerHTML = controls;
+
+    // Event listeners for generic properties
+    document.getElementById('x-pos').addEventListener('change', (e) => node.x(parseFloat(e.target.value)));
+    document.getElementById('y-pos').addEventListener('change', (e) => node.y(parseFloat(e.target.value)));
+    document.getElementById('width').addEventListener('change', (e) => node.width(parseFloat(e.target.value)));
+    document.getElementById('height').addEventListener('change', (e) => node.height(parseFloat(e.target.value)));
+    document.getElementById('rotation').addEventListener('change', (e) => node.rotation(parseFloat(e.target.value)));
+
+    // Re-draw layer after property change
+    propertiesPanel.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('change', () => layer.draw());
+    });
+
+    if (type === 'Text') {
+        let textControls = `
+            <hr>
+            <label>Font Size</label>
+            <input type="number" id="font-size" value="${node.fontSize()}">
+            <label>Font Family</label>
+            <select id="font-family">
+                <option value="Arial" ${node.fontFamily() === 'Arial' ? 'selected' : ''}>Arial</option>
+                <option value="Times New Roman" ${node.fontFamily() === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                <option value="Verdana" ${node.fontFamily() === 'Verdana' ? 'selected' : ''}>Verdana</option>
+            </select>
+            <label>Fill Color</label>
+            <input type="color" id="fill-color" value="${node.fill()}">
+            <div>
+                <button id="font-style-bold">Bold</button>
+                <button id="font-style-italic">Italic</button>
+            </div>
+            <div>
+                <button id="align-left">Left</button>
+                <button id="align-center">Center</button>
+                <button id="align-right">Right</button>
+            </div>
+        `;
+        propertiesPanel.innerHTML += textControls;
+
+        // Event listeners for text properties
+        document.getElementById('font-size').addEventListener('change', (e) => node.fontSize(parseFloat(e.target.value)));
+        document.getElementById('font-family').addEventListener('change', (e) => node.fontFamily(e.target.value));
+        document.getElementById('fill-color').addEventListener('change', (e) => node.fill(e.target.value));
+        document.getElementById('font-style-bold').addEventListener('click', () => {
+            const currentStyle = node.fontStyle();
+            if (currentStyle.includes('bold')) {
+                node.fontStyle(currentStyle.replace('bold', '').trim());
+            } else {
+                node.fontStyle((currentStyle + ' bold').trim());
+            }
+            layer.draw();
+        });
+        document.getElementById('font-style-italic').addEventListener('click', () => {
+            const currentStyle = node.fontStyle();
+            if (currentStyle.includes('italic')) {
+                node.fontStyle(currentStyle.replace('italic', '').trim());
+            } else {
+                node.fontStyle((currentStyle + ' italic').trim());
+            }
+            layer.draw();
+        });
+        document.getElementById('align-left').addEventListener('click', () => node.align('left'));
+        document.getElementById('align-center').addEventListener('click', () => node.align('center'));
+        document.getElementById('align-right').addEventListener('click', () => node.align('right'));
+
+        propertiesPanel.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => layer.draw());
+        });
+    }
+
+    if (type === 'Rect' || type === 'Circle') {
+        let shapeControls = `
+            <hr>
+            <label>Fill Color</label>
+            <input type="color" id="fill-color" value="${node.fill()}">
+            <label>Stroke Color</label>
+            <input type="color" id="stroke-color" value="${node.stroke()}">
+            <label>Stroke Width</label>
+            <input type="number" id="stroke-width" value="${node.strokeWidth()}">
+            <label>Opacity</label>
+            <input type="range" id="opacity" min="0" max="1" step="0.1" value="${node.opacity()}">
+        `;
+        propertiesPanel.innerHTML += shapeControls;
+
+        // Event listeners for shape properties
+        document.getElementById('fill-color').addEventListener('change', (e) => node.fill(e.target.value));
+        document.getElementById('stroke-color').addEventListener('change', (e) => node.stroke(e.target.value));
+        document.getElementById('stroke-width').addEventListener('change', (e) => node.strokeWidth(parseFloat(e.target.value)));
+        document.getElementById('opacity').addEventListener('input', (e) => node.opacity(parseFloat(e.target.value)));
+
+        propertiesPanel.querySelectorAll('input').forEach(input => {
+            input.addEventListener('change', () => layer.draw());
+            input.addEventListener('input', () => layer.draw());
+        });
+    }
+
+    if (type === 'Image') {
+        let imageFiltersControls = `
+            <hr>
+            <h4>Image Filters</h4>
+            <button id="filter-grayscale">Grayscale</button>
+            <button id="filter-sepia">Sepia</button>
+            <button id="filter-blur">Blur</button>
+            <button id="filter-reset">Reset</button>
+        `;
+        propertiesPanel.innerHTML += imageFiltersControls;
+
+        // Event listeners for image filters
+        document.getElementById('filter-grayscale').addEventListener('click', () => {
+            node.cache();
+            node.filters([Konva.Filters.Grayscale]);
+            layer.batchDraw();
+        });
+        document.getElementById('filter-sepia').addEventListener('click', () => {
+            node.cache();
+            node.filters([Konva.Filters.Sepia]);
+            layer.batchDraw();
+        });
+        document.getElementById('filter-blur').addEventListener('click', () => {
+            node.cache();
+            node.filters([Konva.Filters.Blur]);
+            node.blurRadius(10);
+            layer.batchDraw();
+        });
+        document.getElementById('filter-reset').addEventListener('click', () => {
+            node.cache();
+            node.filters([]);
+            layer.batchDraw();
+        });
+    }
+}
+
+const arrangePanel = document.getElementById('arrange-panel');
+
+function updateArrangePanel(node) {
+    arrangePanel.innerHTML = ''; // Clear the panel
+
+    if (!node) {
+        return;
+    }
+
+    let arrangeControls = `
+        <h4>Arrange</h4>
+        <button id="move-up">Bring Forward</button>
+        <button id="move-down">Send Backward</button>
+        <button id="move-to-top">Bring to Front</button>
+        <button id="move-to-bottom">Send to Back</button>
+    `;
+    arrangePanel.innerHTML = arrangeControls;
+
+    // Event listeners for arrange controls
+    document.getElementById('move-up').addEventListener('click', () => {
+        node.moveUp();
+        layer.draw();
+    });
+    document.getElementById('move-down').addEventListener('click', () => {
+        node.moveDown();
+        layer.draw();
+    });
+    document.getElementById('move-to-top').addEventListener('click', () => {
+        node.moveToTop();
+        layer.draw();
+    });
+    document.getElementById('move-to-bottom').addEventListener('click', () => {
+        node.moveToBottom();
+        layer.draw();
+    });
+}
+
 
 // Deselect shapes when clicking on the stage
 stage.on('click tap', function (e) {
     // if click on empty area - remove all transformers
     if (e.target === stage) {
-        layer.find('Transformer').forEach(tr => tr.destroy());
+        layer.find('Transformer').forEach(tr => tr.nodes([]));
+        updatePropertiesPanel(null); // Clear properties panel
+        updateArrangePanel(null); // Clear arrange panel
         layer.draw();
         return;
+    }
+});
+
+document.getElementById('group-btn').addEventListener('click', () => {
+    const tr = layer.findOne('Transformer');
+    const nodes = tr.nodes();
+    if (nodes.length > 1) {
+        const group = new Konva.Group({
+            draggable: true,
+        });
+        nodes.forEach(node => {
+            node.moveTo(group);
+        });
+        layer.add(group);
+        tr.nodes([group]);
+        addTransformer(group);
+        layer.draw();
+    }
+});
+
+document.getElementById('ungroup-btn').addEventListener('click', () => {
+    const tr = layer.findOne('Transformer');
+    const nodes = tr.nodes();
+    if (nodes.length === 1 && nodes[0].getClassName() === 'Group') {
+        const group = nodes[0];
+        group.getChildren().forEach(node => {
+            node.moveTo(layer);
+        });
+        group.destroy();
+        tr.nodes([]);
+        layer.draw();
     }
 });
 
@@ -270,4 +513,65 @@ addFrame1.addEventListener('click', function () {
     layer.add(frame);
     addTransformer(frame);
     layer.draw();
+});
+
+// State Management
+document.getElementById('save-btn').addEventListener('click', () => {
+    const json = stage.toJSON();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(json);
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href",     dataStr);
+    downloadAnchorNode.setAttribute("download", "canvas.json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+});
+
+document.getElementById('load-btn').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const json = event.target.result;
+        stage.destroy();
+        stage = Konva.Node.create(json, 'container');
+        layer = stage.findOne('Layer');
+
+        // Re-attach transformers and event listeners
+        layer.find('Rect, Circle, Text, Image, Group').forEach(node => {
+            addTransformer(node);
+        });
+
+        stage.on('click tap', function (e) {
+            // if click on empty area - remove all transformers
+            if (e.target === stage) {
+                layer.find('Transformer').forEach(tr => tr.nodes([]));
+                updatePropertiesPanel(null); // Clear properties panel
+                updateArrangePanel(null); // Clear arrange panel
+                layer.draw();
+                return;
+            }
+        });
+    };
+    reader.readAsText(file);
+});
+
+// Exporting
+function downloadURI(uri, name) {
+    const link = document.createElement('a');
+    link.download = name;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    delete link;
+}
+
+document.getElementById('export-png-btn').addEventListener('click', () => {
+    const dataURL = stage.toDataURL({ pixelRatio: 3 });
+    downloadURI(dataURL, 'canvas.png');
+});
+
+document.getElementById('export-jpeg-btn').addEventListener('click', () => {
+    const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.8, pixelRatio: 3 });
+    downloadURI(dataURL, 'canvas.jpeg');
 });
