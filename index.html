@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konva Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Konva Clone</h1>
+    </header>
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="tool-section">
+                <h3>Templates</h3>
+                <button id="add-template-1">Add Template 1</button>
+            </div>
+            <div class="tool-section">
+                <h3>Text</h3>
+                <button id="add-text">Add Text</button>
+            </div>
+            <div class="tool-section">
+                <h3>Images</h3>
+                <input type="file" id="upload-image" accept="image/*">
+            </div>
+            <div class="tool-section">
+                <h3>Shapes</h3>
+                <button id="add-rect">Add Rectangle</button>
+                <button id="add-circle">Add Circle</button>
+            </div>
+            <div class="tool-section">
+                <h3>Frames</h3>
+                <button id="add-frame-1">Add Frame 1</button>
+            </div>
+            <div class="tool-section">
+                <h3>Uploads</h3>
+                <p>Your uploads will appear here.</p>
+            </div>
+        </aside>
+        <main class="canvas-container">
+            <div id="container"></div>
+        </main>
+    </div>
+    <script src="https://unpkg.com/konva@8.3.13/konva.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
