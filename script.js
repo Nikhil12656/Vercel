@@ -29,6 +29,28 @@ function addTransformer(shape) {
             return newBox;
         },
     });
+
+    if (shape.getClassName() === 'Image') {
+        tr.boundBoxFunc((oldBox, newBox) => {
+            if (newBox.width < 10 || newBox.height < 10) {
+                return oldBox;
+            }
+            return newBox;
+        });
+        shape.on('transform', () => {
+            const node = shape;
+            const crop = node.crop();
+            const newCrop = {
+                x: crop.x / node.scaleX(),
+                y: crop.y / node.scaleY(),
+                width: node.width(),
+                height: node.height()
+            };
+            node.crop(newCrop);
+            node.scaleX(1);
+            node.scaleY(1);
+        });
+    }
     layer.add(tr);
     layer.draw();
 
@@ -339,6 +361,11 @@ addText.addEventListener('click', function () {
     layer.draw();
 
     textNode.on('dblclick dbltap', () => {
+        // hide text node and transformer:
+        textNode.hide();
+        layer.findOne('Transformer').hide();
+        layer.draw();
+
         // create textarea over canvas, in position of text
         const textPosition = textNode.getAbsolutePosition();
         const stageBox = stage.container().getBoundingClientRect();
@@ -351,13 +378,14 @@ addText.addEventListener('click', function () {
         const textarea = document.createElement('textarea');
         document.body.appendChild(textarea);
 
+        // apply many styles to match text on canvas as close as possible
         textarea.value = textNode.text();
         textarea.style.position = 'absolute';
         textarea.style.top = areaPosition.y + 'px';
         textarea.style.left = areaPosition.x + 'px';
-        textarea.style.width = textNode.width() - textNode.padding() * 2 + 'px';
-        textarea.style.height = textNode.height() - textNode.padding() * 2 + 5 + 'px';
-        textarea.style.fontSize = textNode.fontSize() + 'px';
+        textarea.style.width = textNode.width() * textNode.scaleX() + 'px';
+        textarea.style.height = textNode.height() * textNode.scaleY() + 'px';
+        textarea.style.fontSize = textNode.fontSize() * textNode.scaleY() + 'px';
         textarea.style.border = 'none';
         textarea.style.padding = '0px';
         textarea.style.margin = '0px';
@@ -370,67 +398,66 @@ addText.addEventListener('click', function () {
         textarea.style.transformOrigin = 'left top';
         textarea.style.textAlign = textNode.align();
         textarea.style.color = textNode.fill();
-        const rotation = textNode.rotation();
+        let rotation = textNode.rotation();
         let transform = '';
         if (rotation) {
             transform += 'rotateZ(' + rotation + 'deg)';
         }
 
+        let px = 0;
+        const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+        if (isFirefox) {
+            px += 2 + Math.round(textNode.fontSize() / 20);
+        }
+        transform += `translateY(-${px}px)`;
+
         textarea.style.transform = transform;
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 3 + 'px';
+
         textarea.focus();
 
         function removeTextarea() {
             textarea.parentNode.removeChild(textarea);
             window.removeEventListener('click', handleOutsideClick);
             textNode.show();
+            layer.findOne('Transformer').show();
             layer.draw();
         }
 
-        function setTextareaWidth(newWidth) {
-            if (!newWidth) {
-                // set width for placeholder
-                newWidth = textNode.placeholder.length * textNode.fontSize();
+        function handleOutsideClick(e) {
+            if (e.target !== textarea) {
+                if (textarea.value === '') {
+                    textNode.destroy();
+                } else {
+                    textNode.text(textarea.value);
+                }
+                removeTextarea();
             }
-            const isSafari = /^((?!chrome|android).)*safari/i.test(
-                navigator.userAgent
-            );
-            const isFirefox =
-                navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-            if (isSafari || isFirefox) {
-                newWidth = Math.ceil(newWidth);
-            }
-            textarea.style.width = newWidth + 'px';
         }
+        setTimeout(() => {
+            window.addEventListener('click', handleOutsideClick);
+        });
 
         textarea.addEventListener('keydown', function (e) {
             // hide on enter
-            // but don't hide on shift + enter
             if (e.keyCode === 13 && !e.shiftKey) {
-                textNode.text(textarea.value);
+                if (textarea.value === '') {
+                    textNode.destroy();
+                } else {
+                    textNode.text(textarea.value);
+                }
                 removeTextarea();
             }
             // on esc do not set value
             if (e.keyCode === 27) {
                 removeTextarea();
             }
-
-            const scale = textNode.getAbsoluteScale().x;
-            setTextareaWidth(textNode.width() * scale);
-            textarea.style.height = 'auto';
-            textarea.style.height =
-                textarea.scrollHeight + textNode.fontSize() + 'px';
         });
 
-        function handleOutsideClick(e) {
-            if (e.target !== textarea) {
-                textNode.text(textarea.value);
-                removeTextarea();
-            }
-        }
-        setTimeout(() => {
-            window.addEventListener('click', handleOutsideClick);
+        textarea.addEventListener('input', function () {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + textNode.fontSize() * 0.2 + 'px';
         });
     });
 });
@@ -462,6 +489,40 @@ addCircle.addEventListener('click', function () {
     });
     layer.add(circle);
     addTransformer(circle);
+    layer.draw();
+});
+
+document.getElementById('add-star').addEventListener('click', function () {
+    const star = new Konva.Star({
+        x: 150,
+        y: 150,
+        numPoints: 5,
+        innerRadius: 40,
+        outerRadius: 70,
+        fill: 'yellow',
+        stroke: 'black',
+        strokeWidth: 4,
+        draggable: true,
+    });
+    layer.add(star);
+    addTransformer(star);
+    layer.draw();
+});
+
+document.getElementById('add-arrow').addEventListener('click', function () {
+    const arrow = new Konva.Arrow({
+        x: 200,
+        y: 200,
+        points: [0, 0, 100, 100],
+        pointerLength: 20,
+        pointerWidth: 20,
+        fill: 'black',
+        stroke: 'black',
+        strokeWidth: 4,
+        draggable: true,
+    });
+    layer.add(arrow);
+    addTransformer(arrow);
     layer.draw();
 });
 
@@ -566,6 +627,64 @@ function downloadURI(uri, name) {
     delete link;
 }
 
+// History
+let history = [stage.toJSON()];
+let historyStep = 0;
+
+function saveHistory() {
+    if (historyStep < history.length - 1) {
+        history = history.slice(0, historyStep + 1);
+    }
+    history.push(stage.toJSON());
+    historyStep++;
+}
+
+stage.on('mouseup touchend', saveHistory);
+stage.on('dragend', saveHistory);
+stage.on('transformend', saveHistory);
+
+document.getElementById('undo-btn').addEventListener('click', () => {
+    if (historyStep > 0) {
+        historyStep--;
+        const previous = history[historyStep];
+        stage.destroy();
+        stage = Konva.Node.create(previous, 'container');
+        layer = stage.findOne('Layer');
+        layer.find('Rect, Circle, Text, Image, Group').forEach(node => {
+            addTransformer(node);
+        });
+        stage.on('click tap', function (e) {
+            if (e.target === stage) {
+                layer.find('Transformer').forEach(tr => tr.nodes([]));
+                updatePropertiesPanel(null);
+                updateArrangePanel(null);
+                layer.draw();
+            }
+        });
+    }
+});
+
+document.getElementById('redo-btn').addEventListener('click', () => {
+    if (historyStep < history.length - 1) {
+        historyStep++;
+        const next = history[historyStep];
+        stage.destroy();
+        stage = Konva.Node.create(next, 'container');
+        layer = stage.findOne('Layer');
+        layer.find('Rect, Circle, Text, Image, Group').forEach(node => {
+            addTransformer(node);
+        });
+        stage.on('click tap', function (e) {
+            if (e.target === stage) {
+                layer.find('Transformer').forEach(tr => tr.nodes([]));
+                updatePropertiesPanel(null);
+                updateArrangePanel(null);
+                layer.draw();
+            }
+        });
+    }
+});
+
 document.getElementById('export-png-btn').addEventListener('click', () => {
     const dataURL = stage.toDataURL({ pixelRatio: 3 });
     downloadURI(dataURL, 'canvas.png');
@@ -574,4 +693,9 @@ document.getElementById('export-png-btn').addEventListener('click', () => {
 document.getElementById('export-jpeg-btn').addEventListener('click', () => {
     const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.8, pixelRatio: 3 });
     downloadURI(dataURL, 'canvas.jpeg');
+});
+
+// Canvas Background
+document.getElementById('canvas-bg-color').addEventListener('input', (e) => {
+    stage.container().style.backgroundColor = e.target.value;
 });
