@@ -3,83 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konva Clone</title>
+    <title>Qoder Clone</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>Konva Clone</h1>
+        <nav>
+            <div class="logo">Qoder</div>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
     </header>
-    <div class="main-container">
-        <aside class="sidebar">
-            <div class="tool-section">
-                <h3>Templates</h3>
-                <button id="add-template-1">Add Template 1</button>
+    <main>
+        <section class="hero">
+            <h1>The Ultimate Platform for Developers</h1>
+            <p>Build, test, and deploy your applications with ease.</p>
+            <button>Get Started</button>
+        </section>
+        <section class="features">
+            <h2>Features</h2>
+            <div class="feature-list">
+                <div class="feature">
+                    <h3>Feature 1</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
+                <div class="feature">
+                    <h3>Feature 2</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
+                <div class="feature">
+                    <h3>Feature 3</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
             </div>
-            <div class="tool-section">
-                <h3>Text</h3>
-                <button id="add-text">Add Text</button>
+        </section>
+        <section class="pricing">
+            <h2>Pricing</h2>
+            <div class="pricing-plans">
+                <div class="plan">
+                    <h3>Basic</h3>
+                    <p>$10/month</p>
+                    <button>Sign Up</button>
+                </div>
+                <div class="plan">
+                    <h3>Pro</h3>
+                    <p>$20/month</p>
+                    <button>Sign Up</button>
+                </div>
+                <div class="plan">
+                    <h3>Enterprise</h3>
+                    <p>Contact Us</p>
+                    <button>Contact</button>
+                </div>
             </div>
-            <div class="tool-section">
-                <h3>Images</h3>
-                <input type="file" id="upload-image" accept="image/*">
-            </div>
-            <div class="tool-section">
-                <h3>Shapes</h3>
-                <button id="add-rect">Add Rectangle</button>
-                <button id="add-circle">Add Circle</button>
-                <button id="add-star">Add Star</button>
-                <button id="add-arrow">Add Arrow</button>
-            </div>
-            <div class="tool-section">
-                <h3>Frames</h3>
-                <button id="add-frame-1">Add Frame 1</button>
-            </div>
-            <div class="tool-section">
-                <h3>Uploads</h3>
-                <p>Your uploads will appear here.</p>
-            </div>
-        </aside>
-        <main class="canvas-container">
-            <div id="container"></div>
-        </main>
-        <aside class="sidebar" id="properties-sidebar">
-            <h3>Properties</h3>
-            <div id="properties-panel">
-                <p>Select an object to see its properties.</p>
-            </div>
-            <div id="arrange-panel">
-                <!-- Dynamically populated -->
-            </div>
-            <div id="grouping-panel">
-                <h4>Grouping</h4>
-                <button id="group-btn">Group</button>
-                <button id="ungroup-btn">Ungroup</button>
-            </div>
-            <div id="image-filters-panel"></div>
-            <div id="state-management-panel">
-                <h4>State Management</h4>
-                <button id="save-btn">Save</button>
-                <input type="file" id="load-btn" accept=".json">
-            </div>
-            <div id="export-panel">
-                <h4>Export</h4>
-                <button id="export-png-btn">Export as PNG</button>
-                <button id="export-jpeg-btn">Export as JPEG</button>
-            </div>
-            <div id="history-panel">
-                <h4>History</h4>
-                <button id="undo-btn">Undo</button>
-                <button id="redo-btn">Redo</button>
-            </div>
-            <div id="canvas-panel">
-                <h4>Canvas</h4>
-                <label>Background Color</label>
-                <input type="color" id="canvas-bg-color">
-            </div>
-        </aside>
-    </div>
-    <script src="https://unpkg.com/konva@8.3.13/konva.min.js"></script>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Qoder Clone. All rights reserved.</p>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>
